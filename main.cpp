@@ -60,7 +60,7 @@ while(1){
                     if(input[0] == ' ' ){
                     input = input.erase(0,1); //erase the first char in the string 
                     first_input_char = input[0]; 
-                    }
+                    } //replace this with a sanatize to remove spaces 
 
 
 
