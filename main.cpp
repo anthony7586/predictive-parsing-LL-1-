@@ -48,6 +48,29 @@ int main()
         last_stack_char = cur_stack_string.back();   
         first_input_char = input[0];
 
+
+         // CHECK IF INPUT CAN BE PARSED  ==============================================
+        bool isAccept = true;
+        // make sure input exists
+        if(input.empty()) {cout << "string not accepted.\n ";}
+
+        //check if input chars are valid
+        string states = "+*-/()a$";
+        bool isValid = states.find(input) != string::npos;
+
+        if(!isValid) { isAccept = false; }
+
+        if(last_stack_char != '$') { isAccept = false; }
+    
+        // If not accepted display contents of queue
+        if(!isAccept) 
+        {
+         display_all(stack_col,input_col,output_col);
+         cout << "string not accepted.\n ";
+         return 0;
+        }
+
+        
         if (last_stack_char != first_input_char) //if the last stck char and first input are NOT equivelent execute 
         {
             // Look for production rule and push curent production into output queue
