@@ -52,7 +52,7 @@ int main()
          // CHECK IF INPUT CAN BE PARSED  ==============================================
         bool isAccept = true;
         // make sure input exists
-        if(input.empty()) {cout << "string not accepted.\n ";}
+        if(input.empty()) {isAccept = false;}
 
         //check if input chars are valid
         string states = "+*-/()a$";
