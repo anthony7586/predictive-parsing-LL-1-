@@ -2,7 +2,121 @@
 #include <string>
 #include <algorithm> //https://www.digitalocean.com/community/tutorials/reverse-string-c-plus-plus
 #include <queue> // https://www.programiz.com/cpp-programming/stack
+#include <regex>
+
 using namespace std;
+
+
+// This function taks in the queues and displays them, executes when you know if string is accepted or not accepted and 
+// we want to display the data 
+void display_all(queue<string> stack_col, queue<string> input_col, queue<string> output_col)
+{
+    queue<string> s = stack_col; //make a copy, so we can display each queue 
+    queue<string> i = input_col;
+    queue<string> o = output_col;
+
+    // All queues shoudl be equal in size so you should just have to check length of 1
+    while (!s.empty())
+    {
+        cout << s.front() << "   |   " << i.front() << "   |   " << o.front() << "   |   " << endl;
+
+        s.pop(); i.pop(); o.pop(); //clear the first items in the queue, then repreat.
+
+    }
+
+}
+
+// This function is used to find the proper production rule, called in main 
+string production_rule(char y_column, char x_row)
+{
+    string pro_rule;
+
+    if (y_column == 'E')
+    {
+        pro_rule = "TQ";
+        return pro_rule;
+    }
+
+    if ((y_column == 'Q') && (x_row == '+'))
+    {
+        pro_rule = "+TQ";
+        return pro_rule;
+    }
+
+    if ((y_column == 'Q') && (x_row == '-'))
+    {
+        pro_rule = "-TQ";
+        return pro_rule;
+    }
+
+    if ((y_column == 'Q') && (x_row == ')'))
+    {
+        pro_rule = "";//supposed to be ɛ but since it will be deleted i just didnt input it 
+        return pro_rule;
+    }
+
+    if ((y_column == 'Q') && (x_row == '$'))
+    {
+        pro_rule = "";//supposed to be ɛ but since it will be deleted i just didnt input it 
+        return pro_rule;
+    }
+
+    if (y_column == 'T')
+    {
+        pro_rule = "FR";
+        return pro_rule;
+    }
+
+    if ((y_column == 'R') && (x_row == '+'))
+    {
+        pro_rule = "";//supposed to be ɛ but since it will be deleted i just didnt input it 
+        return pro_rule;
+    }
+
+    if ((y_column == 'R') && (x_row == '-'))
+    {
+        pro_rule = "";//supposed to be ɛ but since it will be deleted i just didnt input it 
+        return pro_rule;
+    }
+
+    if ((y_column == 'R') && (x_row == '*'))
+    {
+        pro_rule = "*FR";
+        return pro_rule;
+    }
+
+    if ((y_column == 'R') && (x_row == '/'))
+    {
+        pro_rule = "/FR";
+        return pro_rule;
+    }
+
+    if ((y_column == 'R') && (x_row == ')'))
+    {
+        pro_rule = "";//supposed to be ɛ but since it will be deleted i just didnt input it 
+        return pro_rule;
+    }
+
+    if ((y_column == 'R') && (x_row == '$'))
+    {
+        pro_rule = "";//supposed to be ɛ but since it will be deleted i just didnt input it 
+        return pro_rule;
+    }
+
+    if ((y_column == 'F') && (x_row == 'a'))
+    {
+        pro_rule = "a";
+        return pro_rule;
+    }
+
+    if ((y_column == 'F') && (x_row == '('))
+    {
+        pro_rule = "(E)";
+        return pro_rule;
+    }
+
+    return "not found";
+}
 
 int main()
 {
@@ -19,6 +133,7 @@ int main()
 
     char last_stack_char;           //char being compared
     char first_input_char;          //char being compared
+    const int MAX_LENGTH = 50;
 
     // Start with user input strings
     cout << "input the string.\n";
@@ -28,12 +143,13 @@ int main()
     /*      these will be test strings 
             og_input
 
-            (a +a )*a$
+            (a+a)*a$
             a*(a/a)$
             a(a+a)$
     */
    
     // :oad the stack columb with a $ and the first non terminal, push input, and push empty for output first row  
+
     stack_col.push("$E");      input_col.push(og_input);          output_col.push(" ");
     
     // Remove all spaces from the input string
@@ -42,7 +158,7 @@ int main()
     // Now that we have string we will use given Predictive parsing table to compare.
     // setting curent variable to later be compared 
     while(1)
-    {      
+    {
         // Assign the last_stack_char and first_input_char so that we can evaluate
         cur_stack_string = stack_col.back();
         last_stack_char = cur_stack_string.back();   
@@ -50,27 +166,32 @@ int main()
 
 
          // CHECK IF INPUT CAN BE PARSED  ==============================================
-        bool isAccept = true;
+        bool isGoodInput = true;
+        bool isValidInput = true;
         // make sure input exists
-        if(input.empty()) {isAccept = false;}
+        if (input.empty()) isGoodInput = false;
 
-        //check if input chars are valid
-        string states = "+*-/()a$";
-        bool isValid = states.find(input) != string::npos;
-
-        if(!isValid) { isAccept = false; }
-
-        if(last_stack_char != '$') { isAccept = false; }
-    
-        // If not accepted display contents of queue
-        if(!isAccept) 
+        // Try to match all lexing cases at the start of the input.
+        smatch inputMatch;
+        regex validCharsToUseRegex("[+|*|-|\/|(|)|a|$]*");
+        if (regex_search(input, inputMatch, validCharsToUseRegex))
         {
-         display_all(stack_col,input_col,output_col);
-         cout << "string not accepted.\n ";
-         return 0;
+            if (inputMatch.length() == input.length()) isValidInput = true;
+            else isValidInput = false;
         }
 
-        
+        if (!isValidInput) isGoodInput = false;
+
+        if (input.back() != '$') isGoodInput = false;
+
+        // If not good, display contents of queue
+        if (isGoodInput == false)
+        {
+            display_all(stack_col, input_col, output_col);
+            cout << "string not accepted.\n ";
+            return 0;
+        }
+
         if (last_stack_char != first_input_char) //if the last stck char and first input are NOT equivelent execute 
         {
             // Look for production rule and push curent production into output queue
@@ -81,7 +202,7 @@ int main()
             // cur_pro_rule is reversed in next line and stored in rev_prod
             rev_prod = cur_pro_rule;
             reverse(rev_prod.begin(), rev_prod.end());
-                    
+
             // Now we replace the char in the cur_stack_string with the new production rule as long as its not epsilon 
             // since epsilon will be deleted i decided to leave it out and not push epsilon 
             if (rev_prod != "ɛ")
@@ -141,113 +262,3 @@ int main()
 
     return 0;
 };
-
-// This function taks in the queues and displays them, executes when you know if string is accepted or not accepted and 
-// we want to display the data 
-void display_all(queue<string> stack_col, queue<string> input_col, queue<string> output_col)
-{
-    queue<string> s = stack_col; //make a copy, so we can display each queue 
-    queue<string> i = input_col;
-    queue<string> o = output_col;
-
-    // All queues shoudl be equal in size so you should just have to check length of 1
-    while (!s.empty()) 
-    {
-        cout << s.front() << "   |   " << i.front() << "   |   " << o.front() << "   |   " << endl;  
-        
-        s.pop(); i.pop(); o.pop(); //clear the first items in the queue, then repreat.
-
-    }
-
-}
-
-// This function is used to find the proper production rule, called in main 
-string production_rule(char y_column, char x_row)
-{
-    string pro_rule;
-
-    if (y_column == 'E')
-    {
-        pro_rule = "TQ";
-        return pro_rule; 
-    }
-
-    if ((y_column == 'Q') && (x_row == '+'))
-    {
-        pro_rule = "+TQ";
-        return pro_rule; 
-    }
-    
-    if ((y_column == 'Q') && (x_row == '-'))
-    {
-        pro_rule = "-TQ";
-        return pro_rule; 
-    }
-
-    if ((y_column == 'Q') && (x_row == ')'))
-    {
-        pro_rule = "";//supposed to be ɛ but since it will be deleted i just didnt input it 
-        return pro_rule; 
-    }
-    
-    if ((y_column == 'Q') && (x_row == '$'))
-    { 
-        pro_rule = "";//supposed to be ɛ but since it will be deleted i just didnt input it 
-        return pro_rule; 
-    }
-
-    if (y_column == 'T')
-    { 
-        pro_rule = "FR";
-        return pro_rule; 
-    }
-
-    if ((y_column == 'R') && (x_row == '+'))
-    {
-        pro_rule = "";//supposed to be ɛ but since it will be deleted i just didnt input it 
-        return pro_rule; 
-    }
-
-    if ((y_column == 'R') && (x_row == '-'))
-    {       
-        pro_rule = "";//supposed to be ɛ but since it will be deleted i just didnt input it 
-        return pro_rule; 
-    }
-
-    if ((y_column == 'R') && (x_row == '*'))
-    {       
-        pro_rule = "*FR";
-        return pro_rule; 
-    } 
-
-    if ((y_column == 'R') && (x_row == '/'))
-    {
-        pro_rule = "/FR";
-        return pro_rule; 
-    }
-
-    if ((y_column == 'R') && (x_row == ')'))
-    {       
-        pro_rule = "";//supposed to be ɛ but since it will be deleted i just didnt input it 
-        return pro_rule; 
-    }
-
-    if ((y_column == 'R') && (x_row == '$'))
-    {       
-        pro_rule = "";//supposed to be ɛ but since it will be deleted i just didnt input it 
-        return pro_rule; 
-    } 
-
-    if ((y_column == 'F') && (x_row == 'a'))
-    {       
-        pro_rule = "a";
-        return pro_rule; 
-    } 
-
-    if ((y_column == 'F') && (x_row == '('))
-    {       
-        pro_rule = "(E)";
-        return pro_rule; 
-    }                      
-}
-
