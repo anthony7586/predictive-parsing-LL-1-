@@ -104,7 +104,7 @@ int main()
     if (isGoodInput == false)
     {
         printStack(stack);
-        cout << "string not accepted.\n ";
+        cout << "String not regex.\n ";
         return 0;
     }
 
