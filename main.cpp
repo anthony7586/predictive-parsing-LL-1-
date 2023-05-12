@@ -1,26 +1,22 @@
-#include <iostream>
+#include <vector>
 #include <string>
-#include <algorithm> //https://www.digitalocean.com/community/tutorials/reverse-string-c-plus-plus
-#include <queue> // https://www.programiz.com/cpp-programming/stack
-#include <regex>
+#include <iostream>
+#include <stdio.h>
 
 using namespace std;
 
-// This function taks in the queues and displays them, executes when you know if string is accepted or not accepted and 
-// we want to display the data 
-void display_all(queue<string> stack_col, queue<string> input_col, queue<string> output_col)
+void reverseStr(string& str)
 {
-    queue<string> s = stack_col; //make a copy, so we can display each queue 
-    queue<string> i = input_col;
-    queue<string> o = output_col;
+    int n = str.length();
+    for (int i = 0; i < n / 2; i++)
+        swap(str[i], str[n - i - 1]);
+}
 
-    // All queues shoudl be equal in size so you should just have to check length of 1
-    while (!s.empty())
-    {
-        cout << s.front() << "   |   " << i.front() << "   |   " << o.front() << "   |   " << endl;
-
-        s.pop(); i.pop(); o.pop(); //clear the first items in the queue, then repreat.
-    }
+void printStack(vector<char> stack)
+{
+    cout << "Current stack: ";
+    for (auto& entry : stack) cout << entry << " ";
+    cout << "\n\n";
 }
 
 // This function is used to find the proper production rule, called in main 
@@ -50,62 +46,58 @@ string production_rule(char column, char row)
     return "";
 }
 
-int main()
+bool pushToStack(vector<char>& stack, string toReverse)
 {
-    queue<string> stack_col;
-    queue<string> input_col;
-    queue<string> output_col;
-
-    string cur_stack_string = "";   //for stack column 
-    string cur_pro_rule;
-    string input;
-    string rev_prod;
-
-    string og_input = "";           //will hold original user input
-
-    char last_stack_char;           //char being compared
-    char first_input_char;          //char being compared
-    const int MAX_LENGTH = 50;
-
-    // Start with user input strings
-    cout << "input the string.\n";
-    cin >> og_input; 
-    input = og_input;               // make a copy of string so you can save og for later 
-
-    /*      these will be test strings 
-            og_input
-
-            (a+a)*a$
-            a*(a/a)$
-            a(a+a)$
-    */
-   
-    // Load the stack column with a $ and the first non terminal, push input, and push empty for output first row  
-
-    stack_col.push("$E");
-    input_col.push(og_input);
-    output_col.push(" ");
+    reverseStr(toReverse);
+    string reversed = toReverse;
     
-    // Remove all spaces from the input string
-    remove(input.begin(), input.end(), ' ');
+    bool pushedBackAtLeastOne = false;
+    for (auto& c : reversed)
+    {
+        pushedBackAtLeastOne = true;
+        stack.push_back(c);
+    }
+    
+    if (pushedBackAtLeastOne) return true;
+    else return false;
+}
+
+int main() 
+{
+    string inputString;
+    char state;
+    bool accepted = true;
+    vector<char> stack;
+
+    // Stack will have $ E as it's initial elements.
+    stack.push_back('$');
+    stack.push_back('E');
+
+
+    // user inputString.
+    cout << "Enter string" << endl;
+    cin >> inputString;
+
+	// Remove all spaces from the input string
+    remove(inputString.begin(), inputString.end(), ' ');
 
     bool isGoodInput = true;
     bool isValidInput = true;
     // make sure input exists
-    if (input.empty()) isGoodInput = false;
+    if (inputString.empty()) isGoodInput = false;
 
-    // Try to match all lexing cases at the start of the input.
+    // Try to match all lexing cases at the start of the inputString.
     smatch inputMatch;
     regex validCharsToUseRegex("[+|*|-|\/|(|)|a|$]*");
     if (regex_search(input, inputMatch, validCharsToUseRegex))
     {
-        if (inputMatch.length() == input.length()) isValidInput = true;
+        if (inputMatch.length() == inputString.length()) isValidInput = true;
         else isValidInput = false;
     }
 
     if (!isValidInput) isGoodInput = false;
 
-    if (input.back() != '$') isGoodInput = false;
+    if (inputString.back() != '$') isGoodInput = false;
 
     // If not good, display contents of queue
     if (isGoodInput == false)
@@ -115,72 +107,70 @@ int main()
         return 0;
     }
 
-    // Now that we have string we will use given Predictive parsing table to compare.
-    // setting curent variable to later be compared 
-    while(1)
+    //prints out the current stack.
+    printStack(stack);
+    do 
     {
-        // Assign the last_stack_char and first_input_char so that we can evaluate
-        cur_stack_string = stack_col.back();
-        last_stack_char = cur_stack_string.back();   
-        first_input_char = input[0];
+        state = stack.back();
+        char input = inputString[0];
 
-        if (last_stack_char != first_input_char) //if the last stck char and first input are NOT equivelent execute 
+        if (state == 'e') // 'e' is used in place of ε due to "multi character character constant" error
         {
-            // Look for production rule and push curent production into output queue
-            cur_pro_rule = production_rule(last_stack_char, first_input_char);
-            output_col.push(cur_pro_rule);
+            cout << "Popping from stack: ε" << endl;
+            stack.pop_back();
+            printStack(stack);
+        } 
 
-            // Replace last char in cur_stack_string with the production rule (in reverse)
-            // cur_pro_rule is reversed in next line and stored in rev_prod
-            rev_prod = cur_pro_rule;
-            reverse(rev_prod.begin(), rev_prod.end());
-
-            // Now we replace the char in the cur_stack_string with the new production rule as long as its not epsilon 
-            // since epsilon will be deleted i decided to leave it out and not push epsilon 
-            if (rev_prod != "ɛ")
+        // If state does not equal input, then input string will be rejected.
+        else if (state == 'a' || state == '+' || state == '-' ||
+                state == '*' || state == '/'||state == '(' || state == ')') 
+        {
+            if (state == input) 
             {
-                // Replace char with production rule
-                cur_stack_string.erase(cur_stack_string.end()); //deletes the last char in curent stack string 
-                cur_stack_string.append(rev_prod); //appends the reveresed production 
-                // Push to the stack_col queue 
-                stack_col.push(cur_stack_string);
-                input_col.push(input);
+                {
+                    cout << "Popping from stack: " << stack.back() << endl;
+                    stack.pop_back();
+                    printStack(stack);
+                    inputString.erase(0, 1);
+                    cout << "Input: " << inputString << endl;
+                }
             }
-            else // If we have 'ɛ' then we delete last_stack_char in stack and put the string back on 
-            { 
-                cur_stack_string.erase(cur_stack_string.end());
-                stack_col.push(cur_stack_string);
-                input_col.push(input);
+            else 
+            {
+                cout << "Rejected." << endl;
+                accepted = false;
+                break;
             }
         }
 
-        // Reassign the last_stack_char and first_input_char so that we can re-evaluate
-        cur_stack_string = stack_col.back();
-        last_stack_char = cur_stack_string.back();
-        first_input_char = input[0];
-
-        // If the last stack char and first input are equivelent execute
-        if (last_stack_char == first_input_char) 
-        {     
-            // When the last stack char and first input are both $, then display all the contents...
-            if ((last_stack_char == '$') && (first_input_char == '$'))
-            {                
-                display_all(stack_col, input_col, output_col); //display all queues, stack_col, input_col, output_col
-                cout << "string is accepted/valid\n";
-                return 0; //ends the loop 
+        else if (state == 'E' || state == 'T' || state == 'Q' || state == 'R' || state == 'F') 
+        {
+            if (production_rule(input, state) != "" || (!(state == 'F' && input == 'a'))) 
+            {
+                cout << "Popping from stack: " << stack.back() << endl;
+                stack.pop_back();
+                printStack(stack);
+                if (!(pushToStack(stack, production_rule(input, state)))) 
+                {
+                    accepted = false;
+                    break;
+                }
             }
-
-            // Delete last char from cur_stack_string, then push it into the stack queue 
-            cur_stack_string.pop_back();
-            stack_col.push(cur_stack_string);
-            // Delete first char from input, then push it onto the input queue  
-            input.erase(0,1);
-            input_col.push(input);
-            // Push a blank string into output queue 
-            output_col.push(" ");
+            else 
+            {
+                cout << "Rejected." << endl;
+                accepted = false;
+                break;
+            }
         }
-    }
 
+    } while (state != '$');    // do while state does not equal '$'
+
+    if (accepted) 
+        cout << "Accepted.\n";
+    else 
+        cout << "Rejected.\n";
+
+    system("pause");
     return 0;
-};
-
+}
