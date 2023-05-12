@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 #include <stdio.h>
+#include <regex>
 
 using namespace std;
 
@@ -89,7 +90,7 @@ int main()
     // Try to match all lexing cases at the start of the inputString.
     smatch inputMatch;
     regex validCharsToUseRegex("[+|*|-|\/|(|)|a|$]*");
-    if (regex_search(input, inputMatch, validCharsToUseRegex))
+    if (regex_search(inputString, inputMatch, validCharsToUseRegex))
     {
         if (inputMatch.length() == inputString.length()) isValidInput = true;
         else isValidInput = false;
@@ -99,17 +100,17 @@ int main()
 
     if (inputString.back() != '$') isGoodInput = false;
 
-    // If not good, display contents of queue
+    // If not good, display stack
     if (isGoodInput == false)
     {
-        display_all(stack_col, input_col, output_col);
+        printStack(stack);
         cout << "string not accepted.\n ";
         return 0;
     }
 
     //prints out the current stack.
     printStack(stack);
-    do 
+    while(state != '$')
     {
         state = stack.back();
         char input = inputString[0];
@@ -121,7 +122,7 @@ int main()
             printStack(stack);
         } 
 
-        // If state does not equal input, then input string will be rejected.
+        // Checking non terminals
         else if (state == 'a' || state == '+' || state == '-' ||
                 state == '*' || state == '/'||state == '(' || state == ')') 
         {
@@ -143,6 +144,7 @@ int main()
             }
         }
 
+        // checking terminals
         else if (state == 'E' || state == 'T' || state == 'Q' || state == 'R' || state == 'F') 
         {
             if (production_rule(input, state) != "" || (!(state == 'F' && input == 'a'))) 
@@ -164,13 +166,12 @@ int main()
             }
         }
 
-    } while (state != '$');    // do while state does not equal '$'
+    } 
 
     if (accepted) 
-        cout << "Accepted.\n";
+        cout << "Input is accepted.\n";
     else 
-        cout << "Rejected.\n";
-
-    system("pause");
+        cout << "Input is rejected.\n";
+        
     return 0;
 }
