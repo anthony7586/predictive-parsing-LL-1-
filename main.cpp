@@ -104,7 +104,7 @@ int main()
     if (isGoodInput == false)
     {
         printStack(stack);
-        cout << "String not regex.\n ";
+        cout << "String not regular expression.\n ";
         return 0;
     }
 
