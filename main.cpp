@@ -106,7 +106,8 @@ bool validateInputString(const std::string& str)
     return true;
 }
 
-int main() {
+int main() 
+{
     std::string inputString;
     char curState;
     bool accepted = true;
@@ -131,27 +132,31 @@ int main() {
 
     // Print out the current stack
     printStack(stack);
-    do {
+    do 
+    {
         curState = stack.back();
         char input = inputString[0];
 
-        if (curState == 'e') {
+        if (curState == 'e') 
+        {
             std::cout << "Removing from stack: ε" << std::endl;
             stack.pop_back();
             printStack(stack);
         }
 
         // Checking non-terminals
-        else if (curState == 'a' || curState == '+' || curState == '-' ||
-            curState == '*' || curState == '/' || curState == '(' || curState == ')') {
-            if (curState == input) {
+        else if (curState == 'a' || curState == '+' || curState == '-' || curState == '*' || curState == '/' || curState == '(' || curState == ')') 
+        {
+            if (curState == input) 
+            {
                 std::cout << "Removing from stack: " << stack.back() << std::endl;
                 stack.pop_back();
                 printStack(stack);
                 inputString.erase(0, 1);
                 std::cout << "Input: " << inputString << std::endl;
             }
-            else {
+            else 
+            {
                 std::cout << "Rejected." << std::endl;
                 accepted = false;
                 break;
@@ -159,18 +164,24 @@ int main() {
         }
 
         // Checking terminals
-        else if (curState == 'E' || curState == 'T' || curState == 'Q' || curState == 'R' || curState == 'F') {
+        else if (curState == 'E' || curState == 'T' || curState == 'Q' || curState == 'R' || curState == 'F') 
+        {
             std::string production = findProductionRule(input, curState);
-            if (!production.empty() || (!(curState == 'F' && input == 'a'))) {
+
+            // Ensure production is valid...
+            if (!production.empty() || (!(curState == 'F' && input == 'a'))) 
+            {
                 std::cout << "Removing from stack: " << stack.back() << std::endl;
                 stack.pop_back();
                 printStack(stack);
-                if (!pushToStack(stack, production)) {
+                if (!pushToStack(stack, production)) 
+                {
                     accepted = false;
                     break;
                 }
             }
-            else {
+            else
+            {
                 std::cout << "Rejected." << std::endl;
                 accepted = false;
                 break;
