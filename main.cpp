@@ -3,16 +3,29 @@
 #include <string>
 #include <algorithm>
 #include <regex>
+#include <map>
 
 // Reverses a string
-void reverseString(std::string& str) {
-    int length = str.length();
+std::string reverseString(const std::string& str)
+{
+    std::string reversed = str;
+    int length = reversed.length();
     for (int i = 0; i < length / 2; i++)
-        std::swap(str[i], str[length - i - 1]);
+        std::swap(reversed[i], reversed[length - i - 1]);
+    return reversed;
+}
+
+// Remove all spaces from a given string
+std::string removeSpaces(const std::string& str)
+{
+    std::string result = str;
+    result.erase(remove(result.begin(), result.end(), ' '), result.end());
+    return result;
 }
 
 // Prints the contents of the stack
-void printStack(const std::vector<char>& stack) {
+void printStack(const std::vector<char>& stack)
+{
     std::cout << "Current stack: ";
     for (const auto& entry : stack)
         std::cout << entry << " ";
@@ -20,63 +33,77 @@ void printStack(const std::vector<char>& stack) {
 }
 
 // Find the production rule based on column and row values
-std::string findProductionRule(char column, char row) {
-    if (row == 'E' && column == 'a')
-        return "TQ";
-    if (row == 'E' && column == '(')
-        return "TQ";
-    if (row == 'Q' && column == '+')
-        return "+TQ";
-    if (row == 'Q' && column == '-')
-        return "-TQ";
-    if (row == 'Q' && column == ')')
-        return "e";
-    if (row == 'Q' && column == '$')
-        return "e";
-    if (row == 'T' && column == 'a')
-        return "FR";
-    if (row == 'T' && column == '(')
-        return "FR";
-    if (row == 'R' && column == '+')
-        return "e";
-    if (row == 'R' && column == '-')
-        return "e";
-    if (row == 'R' && column == '*')
-        return "*FR";
-    if (row == 'R' && column == '/')
-        return "/FR";
-    if (row == 'R' && column == ')')
-        return "e";
-    if (row == 'R' && column == '$')
-        return "e";
-    if (row == 'F' && column == 'a')
-        return "a";
-    if (row == 'F' && column == '(')
-        return "(E)";
+std::string findProductionRule(char column, char row)
+{
+    // Use a map to define our production rules
+    std::map<std::pair<char, char>, std::string> rules =
+    {
+        {{'E', 'a'}, "TQ"},
+        {{'E', '('}, "TQ"},
+        {{'Q', '+'}, "+TQ"},
+        {{'Q', '-'}, "-TQ"},
+        {{'Q', ')'}, "e"},
+        {{'Q', '$'}, "e"},
+        {{'T', 'a'}, "FR"},
+        {{'T', '('}, "FR"},
+        {{'R', '+'}, "e"},
+        {{'R', '-'}, "e"},
+        {{'R', '*'}, "*FR"},
+        {{'R', '/'}, "/FR"},
+        {{'R', ')'}, "e"},
+        {{'R', '$'}, "e"},
+        {{'F', 'a'}, "a"},
+        {{'F', '('}, "(E)"}
+    };
 
-    return "";
+    // Find the rule we need and return it
+    auto it = rules.find({ row, column });
+    if (it != rules.end())
+        return it->second;
+    else
+        return "";
 }
 
 // Push a reversed string to the stack
-bool pushToStack(std::vector<char>& stack, const std::string& toReverse) {
-    std::string reversed = toReverse;
-    reverseString(reversed);
-
-    bool pushedAtLeastOne = false;
-    for (const auto& c : reversed) {
-        pushedAtLeastOne = true;
-        std::cout << "Instering in stack: " << c << std::endl;
+bool pushToStack(std::vector<char>& stack, const std::string& toReverse)
+{
+    std::string reversed(toReverse.rbegin(), toReverse.rend());
+    for (const auto& c : reversed)
+    {
+        std::cout << "Inserting in stack: " << c << std::endl;
         stack.push_back(c);
     }
-
-    return pushedAtLeastOne;
+    return !reversed.empty();
 }
 
-// Remove all spaces from a given string
-std::string removeSpaces(const std::string& str) {
-    std::string result = str;
-    result.erase(remove(result.begin(), result.end(), ' '), result.end());
-    return result;
+// Ensure it's not empty, ends with a '$', and matches the valid chars regex
+bool validateInputString(const std::string& str)
+{
+    // Check if input is empty
+    if (str.empty())
+    {
+        std::cout << "Empty string. Invalid input.\n";
+        return false;
+    }
+
+    // Check if the string ends with '$'
+    if (str.back() != '$')
+    {
+        std::cout << "Warning: String does not end with '$'.\n";
+    }
+
+    // Remove all spaces from the string
+    std::string trimmed = removeSpaces(str);
+
+    // Validate input against regular expression pattern
+    std::regex validCharsToUseRegex("[+*-/()a$]*");
+    if (!std::regex_match(trimmed, validCharsToUseRegex))
+    {
+        std::cout << "Invalid characters found in the input string.\n";
+        return false;
+    }
+
+    return true;
 }
 
 int main() {
@@ -94,29 +121,9 @@ int main() {
     std::cout << "Enter a string: ";
     std::cin >> inputString;
 
-    bool isGoodInput = true;
-    bool isValidInput = true;
-
-    // Check if input exists
-    if (inputString.empty())
-        isGoodInput = false;
-
-    if (inputString.back() != '$')
+    // Validate input string
+    if (!validateInputString(inputString))
     {
-        std::cout << "String does not end with a $. Invalid\n";
-        return 0;
-    }
-
-    // Validate input against regular expression pattern
-    std::regex validCharsToUseRegex("[+*-/()a$]*");
-    if (!std::regex_match(inputString, validCharsToUseRegex))
-        isValidInput = false;
-
-    if (!isValidInput)
-        isGoodInput = false;
-
-    // If input is not valid, display the stack and exit
-    if (!isGoodInput) {
         printStack(stack);
         std::cout << "String is not a valid regular expression.\n";
         return 0;
